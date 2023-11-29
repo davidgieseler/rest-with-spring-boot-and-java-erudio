@@ -1,6 +1,8 @@
 package br.com.gruivos.services;
 
+import br.com.gruivos.data.vo.PersonVO;
 import br.com.gruivos.exceptions.ResourceNotFoundException;
+import br.com.gruivos.mapper.GrMapper;
 import br.com.gruivos.model.Person;
 import br.com.gruivos.repositories.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,35 +20,40 @@ public class PersonServices {
     @Autowired
     PersonRepository repository;
 
-    public Person findById(Long id) {
+    public PersonVO findById(Long id) {
 
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        var person = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+
+        return GrMapper.parseObject(person, PersonVO.class);
     }
 
-    public List<Person> findAll() {
+    public List<PersonVO> findAll() {
         logger.info("Finding all person!");
 
 
-        return repository.findAll();
+        return GrMapper.parseListObjects(repository.findAll(), PersonVO.class);
     }
 
-    public Person create(Person person) {
+    public PersonVO create(PersonVO personVo) {
         logger.info("Creating one person!");
 
-        return repository.save(person);
+        var person = GrMapper.parseObject(personVo, Person.class);
+        var vo =  GrMapper.parseObject(repository.save(person), PersonVO.class);
+
+        return vo;
     }
 
-    public Person update(Person person) {
+    public PersonVO update(PersonVO personVo) {
         logger.info("Updating one person!");
 
-        Person entity = repository.findById(person.getId()).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
+        Person person = repository.findById(personVo.getId()).orElseThrow(() -> new ResourceNotFoundException("No records found for this ID!"));
 
-        entity.setFirstName(person.getFirstName());
-        entity.setLastName(person.getLastName());
-        entity.setAddress(person.getAddress());
-        entity.setGender(person.getGender());
+        person.setFirstName(personVo.getFirstName());
+        person.setLastName(personVo.getLastName());
+        person.setAddress(personVo.getAddress());
+        person.setGender(personVo.getGender());
 
-        return repository.save(person);
+        return GrMapper.parseObject(repository.save(person), PersonVO.class);
     }
 
     public void delete(Long id) {
